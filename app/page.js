@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import AuthGate from '@/components/AuthGate.js';
-import LoanSelector, { SEEDED_LOANS } from '@/components/LoanSelector.js';
+import LoanSelector, { DEFAULT_SEEDED_LOANS } from '@/components/LoanSelector.js';
+import CreateLoanModal from '@/components/CreateLoanModal.js';
 import PositionCards from '@/components/PositionCards.js';
 import ScheduleTable from '@/components/ScheduleTable.js';
 import PaymentForm from '@/components/PaymentForm.js';
@@ -11,11 +12,13 @@ import { formatINR } from '@/lib/core/money.js';
 import { auth } from '@/lib/firebaseClient.js';
 
 function LoanDashboard() {
-  const [selectedLoanId, setSelectedLoanId] = useState(SEEDED_LOANS[0].id); // Defaults to Overdue loan
+  const [loans, setLoans] = useState(DEFAULT_SEEDED_LOANS);
+  const [selectedLoanId, setSelectedLoanId] = useState(DEFAULT_SEEDED_LOANS[0].id);
   const [loanView, setLoanView] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [toast, setToast] = useState(null);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const fetchLoanData = useCallback(async (id) => {
     setLoading(true);
@@ -50,6 +53,25 @@ function LoanDashboard() {
     fetchLoanData(selectedLoanId);
   }, [selectedLoanId, fetchLoanData]);
 
+  // When a new loan is created from UI
+  const handleLoanCreated = (createdLoanData) => {
+    const loan = createdLoanData.loan;
+    const newEntry = {
+      id: loan.id,
+      name: `Loan — ${formatINR(loan.principalPaise)} (${loan.tenureMonths}m @ ${loan.annualRatePct}%)`,
+      tag: 'NEW',
+      tagClass: 'badge-due',
+    };
+
+    setLoans((prev) => [newEntry, ...prev]);
+    setSelectedLoanId(loan.id);
+    setLoanView(createdLoanData);
+    setToast({
+      type: 'success',
+      message: `Loan of ${formatINR(loan.principalPaise)} created with ${createdLoanData.schedule.length} instalments!`,
+    });
+  };
+
   // Zero-refresh update when payment succeeds
   const handlePaymentSuccess = (paymentResult) => {
     if (paymentResult?.loanView) {
@@ -81,11 +103,21 @@ function LoanDashboard() {
         />
       )}
 
-      {/* 1. Loan Switcher */}
+      {/* Create Loan Modal */}
+      <CreateLoanModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onLoanCreated={handleLoanCreated}
+        onError={handleError}
+      />
+
+      {/* 1. Loan Switcher + Create Loan Button */}
       <LoanSelector
+        loans={loans}
         selectedLoanId={selectedLoanId}
         onSelectLoan={setSelectedLoanId}
         loanDetails={loanView?.loan}
+        onCreateClick={() => setIsCreateModalOpen(true)}
       />
 
       {loading ? (

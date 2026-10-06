@@ -2,7 +2,7 @@
 
 import { formatINR } from '@/lib/core/money.js';
 
-export const SEEDED_LOANS = [
+export const DEFAULT_SEEDED_LOANS = [
   {
     id: '22222222-2222-4222-8222-222222222222',
     name: 'Loan 2 — Overdue (Required Case)',
@@ -29,7 +29,13 @@ export const SEEDED_LOANS = [
   },
 ];
 
-export default function LoanSelector({ selectedLoanId, onSelectLoan, loanDetails }) {
+export default function LoanSelector({
+  loans = DEFAULT_SEEDED_LOANS,
+  selectedLoanId,
+  onSelectLoan,
+  loanDetails,
+  onCreateClick,
+}) {
   return (
     <div
       style={{
@@ -46,7 +52,7 @@ export default function LoanSelector({ selectedLoanId, onSelectLoan, loanDetails
         boxShadow: 'var(--shadow-subtle)',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
         <label
           htmlFor="loan-select"
           style={{
@@ -55,7 +61,7 @@ export default function LoanSelector({ selectedLoanId, onSelectLoan, loanDetails
             color: 'var(--c-navy)',
           }}
         >
-          Select Loan:
+          Active Loan:
         </label>
         <select
           id="loan-select"
@@ -71,14 +77,24 @@ export default function LoanSelector({ selectedLoanId, onSelectLoan, loanDetails
             backgroundColor: 'var(--c-bg)',
             outline: 'none',
             cursor: 'pointer',
+            maxWidth: '300px',
           }}
         >
-          {SEEDED_LOANS.map((loan) => (
+          {loans.map((loan) => (
             <option key={loan.id} value={loan.id}>
-              {loan.name}
+              {loan.name || `Loan (${loan.id.slice(0, 8)}...)`}
             </option>
           ))}
         </select>
+
+        <button
+          type="button"
+          onClick={onCreateClick}
+          className="btn btn-primary"
+          style={{ padding: '7px 14px', fontSize: '0.82rem' }}
+        >
+          + Create New Loan
+        </button>
       </div>
 
       {loanDetails && (
@@ -86,16 +102,17 @@ export default function LoanSelector({ selectedLoanId, onSelectLoan, loanDetails
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '16px',
+            gap: '12px',
             fontSize: '0.83rem',
             color: 'var(--c-text-muted)',
+            flexWrap: 'wrap',
           }}
         >
           <span>Principal: <strong style={{ color: 'var(--c-espresso)' }}>{formatINR(loanDetails.principalPaise)}</strong></span>
           <span>•</span>
-          <span>Rate: <strong style={{ color: 'var(--c-espresso)' }}>{loanDetails.annualRatePct}% p.a.</strong></span>
+          <span>Rate: <strong style={{ color: 'var(--c-espresso)' }}>{loanDetails.annualRatePct}%</strong></span>
           <span>•</span>
-          <span>Tenure: <strong style={{ color: 'var(--c-espresso)' }}>{loanDetails.tenureMonths} Mo</strong></span>
+          <span>Tenure: <strong style={{ color: 'var(--c-espresso)' }}>{loanDetails.tenureMonths}m</strong></span>
           <span>•</span>
           <span>Disbursed: <strong style={{ color: 'var(--c-espresso)' }}>{loanDetails.disbursementDate}</strong></span>
         </div>
