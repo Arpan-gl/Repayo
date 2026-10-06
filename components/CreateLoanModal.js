@@ -10,21 +10,29 @@ export default function CreateLoanModal({ isOpen, onClose, onLoanCreated, onErro
   const todayIST = getTodayIST();
   const [principalRupees, setPrincipalRupees] = useState('200000');
   const [annualRate, setAnnualRate] = useState('18');
-  const [tenure, setTenure] = useState('24');
+  const [tenureMonths, setTenureMonths] = useState('24');
   const [disbursementDate, setDisbursementDate] = useState(todayIST);
   const [submitting, setSubmitting] = useState(false);
+
+  // Convert months to years (divided by 12)
+  const tenureYears = useMemo(() => {
+    const months = parseInt(tenureMonths, 10);
+    if (!months || isNaN(months)) return '0';
+    const yrs = (months / 12).toFixed(1);
+    return yrs.endsWith('.0') ? yrs.slice(0, -2) : yrs;
+  }, [tenureMonths]);
 
   // Compute live estimated EMI preview
   const estimatedEmi = useMemo(() => {
     const p = parseFloat(principalRupees);
     const r = parseFloat(annualRate);
-    const n = parseInt(tenure, 10);
+    const n = parseInt(tenureMonths, 10);
     if (!p || p <= 0 || isNaN(r) || r < 0 || !n || n < 3 || n > 36) {
       return null;
     }
     const paise = Math.round(p * 100);
     return calculateEmiPaise(paise, r, n);
-  }, [principalRupees, annualRate, tenure]);
+  }, [principalRupees, annualRate, tenureMonths]);
 
   if (!isOpen) return null;
 
@@ -32,7 +40,7 @@ export default function CreateLoanModal({ isOpen, onClose, onLoanCreated, onErro
     e.preventDefault();
     const p = parseFloat(principalRupees);
     const r = parseFloat(annualRate);
-    const n = parseInt(tenure, 10);
+    const n = parseInt(tenureMonths, 10);
 
     if (p < 50000 || p > 1000000) {
       onError('Principal must be between ₹50,000 and ₹10,00,000');
@@ -186,16 +194,22 @@ export default function CreateLoanModal({ isOpen, onClose, onLoanCreated, onErro
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: '700', marginBottom: '4px', color: 'var(--c-espresso)' }}>
-                Tenure (3 - 36 Months)
-              </label>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                <label style={{ fontSize: '0.82rem', fontWeight: '700', color: 'var(--c-espresso)' }}>
+                  Tenure (Months)
+                </label>
+                <span style={{ fontSize: '0.78rem', color: 'var(--c-navy)', fontWeight: '700' }}>
+                  {tenureYears} {tenureYears === '1' ? 'Year' : 'Years'} ({tenureMonths || 0}m)
+                </span>
+              </div>
               <input
                 type="number"
                 min="3"
                 max="36"
-                value={tenure}
-                onChange={(e) => setTenure(e.target.value)}
+                value={tenureMonths}
+                onChange={(e) => setTenureMonths(e.target.value)}
                 required
+                placeholder="24"
                 style={{
                   width: '100%',
                   padding: '10px 14px',
@@ -206,6 +220,32 @@ export default function CreateLoanModal({ isOpen, onClose, onLoanCreated, onErro
                   outline: 'none',
                 }}
               />
+              <div style={{ display: 'flex', gap: '6px', marginTop: '6px' }}>
+                {[
+                  { m: 6, label: '0.5 yr (6m)' },
+                  { m: 12, label: '1 yr (12m)' },
+                  { m: 24, label: '2 yrs (24m)' },
+                  { m: 36, label: '3 yrs (36m)' },
+                ].map((item) => (
+                  <button
+                    key={item.m}
+                    type="button"
+                    onClick={() => setTenureMonths(item.m.toString())}
+                    style={{
+                      background: tenureMonths === item.m.toString() ? 'var(--c-navy)' : 'var(--c-sand-tint)',
+                      color: tenureMonths === item.m.toString() ? '#FFFFFF' : 'var(--c-text-muted)',
+                      border: '1px solid var(--c-sand-border)',
+                      padding: '2px 8px',
+                      borderRadius: 'var(--radius-xs)',
+                      fontSize: '0.72rem',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
