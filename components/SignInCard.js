@@ -9,8 +9,8 @@ import {
 import { auth, googleProvider } from '@/lib/firebaseClient.js';
 
 export default function SignInCard() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('reviewer@vitto.money');
+  const [password, setPassword] = useState('Vitto@2026!');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isRegistering, setIsRegistering] = useState(false);
@@ -28,7 +28,15 @@ export default function SignInCard() {
       }
     } catch (err) {
       console.error('[Auth Error]:', err);
-      setError(err.message || 'Authentication failed. Please check credentials.');
+      if (err.code === 'auth/invalid-credential') {
+        setError('Invalid credentials. Click "Auto-fill demo test account" below to load the verified reviewer credentials, or toggle "Create new account" to register.');
+      } else if (err.code === 'auth/email-already-in-use') {
+        setError('An account with this email already exists. Please switch back to "Sign In".');
+      } else if (err.code === 'auth/weak-password') {
+        setError('Password should be at least 6 characters.');
+      } else {
+        setError(err.message || 'Authentication failed. Please check credentials.');
+      }
     } finally {
       setLoading(false);
     }
@@ -41,7 +49,15 @@ export default function SignInCard() {
       await signInWithPopup(auth, googleProvider);
     } catch (err) {
       console.error('[Google Auth Error]:', err);
-      setError(err.message || 'Google Sign-in failed.');
+      if (err.code === 'auth/unauthorized-domain') {
+        setError('Domain not authorized: Please add "repayo.vercel.app" to Firebase Console > Authentication > Settings > Authorized domains.');
+      } else if (err.code === 'auth/configuration-not-found' || err.code === 'auth/operation-not-allowed') {
+        setError('Google Sign-In is not enabled in Firebase Console (Authentication > Sign-in method). Please sign in using the pre-filled demo email/password.');
+      } else if (err.code === 'auth/popup-closed-by-user') {
+        setError('Google sign-in popup was closed before completion.');
+      } else {
+        setError(err.message || 'Google Sign-in failed.');
+      }
     } finally {
       setLoading(false);
     }
@@ -50,6 +66,8 @@ export default function SignInCard() {
   const fillTestCredentials = () => {
     setEmail('reviewer@vitto.money');
     setPassword('Vitto@2026!');
+    setIsRegistering(false);
+    setError(null);
   };
 
   return (
@@ -103,6 +121,29 @@ export default function SignInCard() {
           >
             MSME Loan Repayment & Servicing Engine
           </p>
+        </div>
+
+        <div
+          style={{
+            backgroundColor: 'rgba(84, 154, 98, 0.08)',
+            border: '1px solid var(--c-moss)',
+            color: 'var(--c-moss)',
+            borderRadius: 'var(--radius-sm)',
+            padding: '10px 14px',
+            fontSize: '0.8rem',
+            marginBottom: '18px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+        >
+          <div>
+            <strong>Demo Account Ready:</strong>
+            <div style={{ color: 'var(--c-espresso)', fontSize: '0.75rem', marginTop: '2px' }}>
+              reviewer@vitto.money • Vitto@2026!
+            </div>
+          </div>
+          <span className="badge badge-success" style={{ fontSize: '0.7rem' }}>Verified</span>
         </div>
 
         {error && (
