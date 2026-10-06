@@ -122,6 +122,7 @@ function LoanDashboard() {
 
       {loading ? (
         <div className="card" style={{ textAlign: 'center', padding: '50px' }}>
+          <div className="spinner" style={{ margin: '0 auto 12px auto' }} />
           <p style={{ color: 'var(--c-text-muted)', fontSize: '0.9rem' }}>
             Loading loan data...
           </p>

@@ -30,26 +30,10 @@ export default function AuthGate({ children }) {
           gap: '16px',
         }}
       >
-        <div
-          style={{
-            width: '40px',
-            height: '40px',
-            border: '3px solid var(--c-line)',
-            borderTopColor: 'var(--c-primary)',
-            borderRadius: '50%',
-            animation: 'spin 0.8s linear infinite',
-          }}
-        />
+        <div className="spinner" />
         <p style={{ color: 'var(--c-text-muted)', fontSize: '0.9rem' }}>
           Loading Repayo Workspace...
         </p>
-        <style jsx>{`
-          @keyframes spin {
-            to {
-              transform: rotate(360deg);
-            }
-          }
-        `}</style>
       </div>
     );
   }
