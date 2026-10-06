@@ -55,7 +55,15 @@ function LoanDashboard() {
 
   // When a new loan is created from UI
   const handleLoanCreated = (createdLoanData) => {
-    const loan = createdLoanData.loan;
+    const loan = createdLoanData?.loan || createdLoanData?.data?.loan;
+    const schedule = createdLoanData?.schedule || createdLoanData?.data?.schedule || [];
+    const fullView = createdLoanData?.loan ? createdLoanData : (createdLoanData?.data || createdLoanData);
+
+    if (!loan || !loan.id) {
+      console.warn('Loan payload was missing id:', createdLoanData);
+      return;
+    }
+
     const newEntry = {
       id: loan.id,
       name: `Loan — ${formatINR(loan.principalPaise)} (${loan.tenureMonths}m @ ${loan.annualRatePct}%)`,
@@ -65,10 +73,10 @@ function LoanDashboard() {
 
     setLoans((prev) => [newEntry, ...prev]);
     setSelectedLoanId(loan.id);
-    setLoanView(createdLoanData);
+    setLoanView(fullView);
     setToast({
       type: 'success',
-      message: `Loan of ${formatINR(loan.principalPaise)} created with ${createdLoanData.schedule.length} instalments!`,
+      message: `Loan of ${formatINR(loan.principalPaise)} created with ${schedule.length} instalments!`,
     });
   };
 
