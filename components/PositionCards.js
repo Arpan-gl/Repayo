@@ -10,115 +10,125 @@ export default function PositionCards({ position }) {
     overdueAmountPaise,
     daysOverdue,
     nextDue,
-    status,
   } = position;
 
   const isOverdue = overdueAmountPaise > 0;
-  const isSettled = status === 'SETTLED';
 
   return (
-    <div className="grid-cards">
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+        gap: '16px',
+        marginBottom: '24px',
+      }}
+    >
       {/* 1. Outstanding Principal */}
-      <div className="card">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: '0.82rem', fontWeight: '700', color: 'var(--c-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            Outstanding Principal
-          </span>
-          <span
-            className={`badge ${
-              isSettled ? 'badge-paid' : isOverdue ? 'badge-overdue' : 'badge-due'
-            }`}
-          >
-            {status}
-          </span>
-        </div>
+      <div
+        className="card"
+        style={{
+          padding: '20px',
+          borderLeft: '4px solid var(--c-navy)',
+        }}
+      >
+        <span
+          style={{
+            fontSize: '0.8rem',
+            fontWeight: '700',
+            color: 'var(--c-text-muted)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.04em',
+          }}
+        >
+          Outstanding Principal
+        </span>
         <div
           className="tabular-nums"
           style={{
-            fontSize: '2rem',
+            fontSize: '1.8rem',
             fontWeight: '800',
             color: 'var(--c-navy)',
-            marginTop: '12px',
-            letterSpacing: '-0.02em',
+            marginTop: '6px',
           }}
         >
           {formatINR(outstandingPrincipalPaise)}
         </div>
-        <p style={{ fontSize: '0.8rem', color: 'var(--c-text-light)', marginTop: '6px' }}>
-          Excludes unaccrued interest components
-        </p>
       </div>
 
       {/* 2. Next Due */}
-      <div className="card">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: '0.82rem', fontWeight: '700', color: 'var(--c-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            Next Due
-          </span>
-          {nextDue && (
-            <span className="badge badge-due">
-              Instalment #{nextDue.seq}
-            </span>
-          )}
-        </div>
+      <div
+        className="card"
+        style={{
+          padding: '20px',
+          borderLeft: '4px solid var(--c-espresso)',
+        }}
+      >
+        <span
+          style={{
+            fontSize: '0.8rem',
+            fontWeight: '700',
+            color: 'var(--c-text-muted)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.04em',
+          }}
+        >
+          Next Due {nextDue ? `(#${nextDue.seq})` : ''}
+        </span>
         <div
           className="tabular-nums"
           style={{
-            fontSize: '2rem',
+            fontSize: '1.8rem',
             fontWeight: '800',
             color: 'var(--c-espresso)',
-            marginTop: '12px',
-            letterSpacing: '-0.02em',
+            marginTop: '6px',
           }}
         >
           {nextDue ? formatINR(nextDue.amountPaise) : '₹0.00'}
         </div>
-        <p style={{ fontSize: '0.8rem', color: 'var(--c-text-muted)', marginTop: '6px' }}>
-          {nextDue ? (
-            <>
-              Due on <strong>{nextDue.dueDate}</strong>
-            </>
-          ) : (
-            'No upcoming instalments due'
-          )}
-        </p>
+        {nextDue && (
+          <span style={{ fontSize: '0.78rem', color: 'var(--c-text-muted)' }}>
+            Due Date: {nextDue.dueDate}
+          </span>
+        )}
       </div>
 
-      {/* 3. Overdue Amount & Days */}
+      {/* 3. Overdue Amount */}
       <div
         className="card"
         style={{
-          backgroundColor: isOverdue ? 'var(--c-peach-tint)' : 'var(--c-surface)',
+          padding: '20px',
+          backgroundColor: isOverdue ? 'var(--c-peach-tint)' : '#FFFFFF',
           borderColor: isOverdue ? 'var(--c-peach)' : 'var(--c-line)',
+          borderLeft: `4px solid ${isOverdue ? 'var(--c-primary)' : 'var(--c-sage)'}`,
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: '0.82rem', fontWeight: '700', color: isOverdue ? 'var(--c-primary)' : 'var(--c-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          <span
+            style={{
+              fontSize: '0.8rem',
+              fontWeight: '700',
+              color: isOverdue ? 'var(--c-primary)' : 'var(--c-text-muted)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.04em',
+            }}
+          >
             Overdue Amount
           </span>
-          <span
-            className={`badge ${isOverdue ? 'badge-overdue' : 'badge-paid'}`}
-          >
-            {isOverdue ? `${daysOverdue} Days Overdue` : 'All Clear'}
+          <span className={`badge ${isOverdue ? 'badge-overdue' : 'badge-paid'}`}>
+            {isOverdue ? `${daysOverdue} Days Late` : 'All Clear'}
           </span>
         </div>
         <div
           className="tabular-nums"
           style={{
-            fontSize: '2rem',
+            fontSize: '1.8rem',
             fontWeight: '800',
             color: isOverdue ? 'var(--c-primary)' : 'var(--c-sage-dark)',
-            marginTop: '12px',
-            letterSpacing: '-0.02em',
+            marginTop: '6px',
           }}
         >
           {formatINR(overdueAmountPaise)}
         </div>
-        <p style={{ fontSize: '0.8rem', color: isOverdue ? 'var(--c-primary)' : 'var(--c-text-muted)', marginTop: '6px' }}>
-          {isOverdue
-            ? `Past due date — immediate collection required`
-            : `All instalments up to date`}
-        </p>
       </div>
     </div>
   );

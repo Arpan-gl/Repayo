@@ -11,7 +11,7 @@ import { formatINR } from '@/lib/core/money.js';
 import { auth } from '@/lib/firebaseClient.js';
 
 function LoanDashboard() {
-  const [selectedLoanId, setSelectedLoanId] = useState(SEEDED_LOANS[1].id); // Defaults to Overdue loan for reviewer
+  const [selectedLoanId, setSelectedLoanId] = useState(SEEDED_LOANS[0].id); // Defaults to Overdue loan
   const [loanView, setLoanView] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -56,7 +56,7 @@ function LoanDashboard() {
       setLoanView(paymentResult.loanView);
       setToast({
         type: 'success',
-        message: `Payment of ${formatINR(paymentResult.payment.amountPaise)} successfully allocated!`,
+        message: `Payment of ${formatINR(paymentResult.payment.amountPaise)} successfully recorded!`,
       });
     } else {
       fetchLoanData(selectedLoanId);
@@ -71,7 +71,7 @@ function LoanDashboard() {
   };
 
   return (
-    <div>
+    <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
       {/* Toast Notification */}
       {toast && (
         <Toast
@@ -81,7 +81,7 @@ function LoanDashboard() {
         />
       )}
 
-      {/* Loan Switcher */}
+      {/* 1. Loan Switcher */}
       <LoanSelector
         selectedLoanId={selectedLoanId}
         onSelectLoan={setSelectedLoanId}
@@ -89,84 +89,52 @@ function LoanDashboard() {
       />
 
       {loading ? (
-        <div className="card" style={{ textAlign: 'center', padding: '60px' }}>
-          <div
-            style={{
-              width: '32px',
-              height: '32px',
-              margin: '0 auto 12px auto',
-              border: '3px solid var(--c-line)',
-              borderTopColor: 'var(--c-primary)',
-              borderRadius: '50%',
-              animation: 'spin 0.8s linear infinite',
-            }}
-          />
+        <div className="card" style={{ textAlign: 'center', padding: '50px' }}>
           <p style={{ color: 'var(--c-text-muted)', fontSize: '0.9rem' }}>
-            Retrieving loan schedule & position...
+            Loading loan data...
           </p>
-          <style jsx>{`
-            @keyframes spin {
-              to {
-                transform: rotate(360deg);
-              }
-            }
-          `}</style>
         </div>
       ) : error ? (
         <div
           className="card"
           style={{
             borderColor: 'var(--c-peach)',
-            backgroundColor: 'var(--c-primary-light)',
+            backgroundColor: 'var(--c-peach-tint)',
             textAlign: 'center',
-            padding: '36px',
+            padding: '30px',
+            marginBottom: '20px',
           }}
         >
-          <h3 style={{ color: 'var(--c-primary)', marginBottom: '8px' }}>
-            ⚠️ Error Loading Loan
-          </h3>
-          <p style={{ color: 'var(--c-espresso)', fontSize: '0.9rem', marginBottom: '16px' }}>
-            {error}
+          <p style={{ color: 'var(--c-primary)', fontWeight: '600', marginBottom: '12px' }}>
+            ⚠️ {error}
           </p>
           <button
             onClick={() => fetchLoanData(selectedLoanId)}
             className="btn btn-primary"
-            style={{ padding: '8px 16px' }}
+            style={{ padding: '6px 16px' }}
           >
-            Retry Fetch
+            Retry
           </button>
         </div>
       ) : loanView ? (
         <div className="animate-fade-in">
-          {/* Position Cards */}
+          {/* 2. Position Cards (Outstanding, Next Due, Overdue) */}
           <PositionCards position={loanView.position} />
 
-          {/* Main Grid: Schedule + Payment Form */}
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 380px',
-              gap: '24px',
-              alignItems: 'start',
-            }}
-          >
-            <div>
-              <ScheduleTable
-                schedule={loanView.schedule}
-                nextDueSeq={loanView.position?.nextDue?.seq}
-              />
-            </div>
+          {/* 3. Record Payment Form */}
+          <PaymentForm
+            loanId={selectedLoanId}
+            schedule={loanView.schedule}
+            position={loanView.position}
+            onPaymentSuccess={handlePaymentSuccess}
+            onError={handleError}
+          />
 
-            <div>
-              <PaymentForm
-                loanId={selectedLoanId}
-                schedule={loanView.schedule}
-                position={loanView.position}
-                onPaymentSuccess={handlePaymentSuccess}
-                onError={handleError}
-              />
-            </div>
-          </div>
+          {/* 4. Schedule Table */}
+          <ScheduleTable
+            schedule={loanView.schedule}
+            nextDueSeq={loanView.position?.nextDue?.seq}
+          />
         </div>
       ) : null}
     </div>
