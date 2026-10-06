@@ -1,0 +1,69 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Loan {
+  id                String       @id @default(uuid()) @db.Uuid
+  principalPaise    Int          @map("principal_paise")
+  annualRatePct     Decimal      @map("annual_rate_pct") @db.Decimal(6, 3)
+  tenureMonths      Int          @map("tenure_months")
+  disbursementDate  DateTime     @map("disbursement_date") @db.Date
+  emiPaise          Int          @map("emi_paise")
+  totalPayablePaise Int          @map("total_payable_paise")
+  createdAt         DateTime     @default(now()) @map("created_at") @db.Timestamptz
+  instalments       Instalment[]
+  payments          Payment[]
+
+  @@map("loans")
+}
+
+model Instalment {
+  id             String       @id @default(uuid()) @db.Uuid
+  loanId         String       @map("loan_id") @db.Uuid
+  seq            Int
+  dueDate        DateTime     @map("due_date") @db.Date
+  principalPaise Int          @map("principal_paise")
+  interestPaise  Int          @map("interest_paise")
+  totalDuePaise  Int          @map("total_due_paise")
+  loan           Loan         @relation(fields: [loanId], references: [id], onDelete: Restrict)
+  allocations    Allocation[]
+
+  @@unique([loanId, seq])
+  @@index([loanId, dueDate])
+  @@map("instalments")
+}
+
+model Payment {
+  id             String       @id @default(uuid()) @db.Uuid
+  loanId         String       @map("loan_id") @db.Uuid
+  amountPaise    Int          @map("amount_paise")
+  paidOn         DateTime     @map("paid_on") @db.Date
+  idempotencyKey String       @map("idempotency_key")
+  requestHash    String       @map("request_hash")
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz
+  loan           Loan         @relation(fields: [loanId], references: [id], onDelete: Restrict)
+  allocations    Allocation[]
+
+  @@unique([loanId, idempotencyKey])
+  @@index([loanId, paidOn])
+  @@map("payments")
+}
+
+model Allocation {
+  id                 String     @id @default(uuid()) @db.Uuid
+  paymentId          String     @map("payment_id") @db.Uuid
+  instalmentId       String     @map("instalment_id") @db.Uuid
+  interestPaidPaise  Int        @map("interest_paid_paise")
+  principalPaidPaise Int        @map("principal_paid_paise")
+  payment            Payment    @relation(fields: [paymentId], references: [id], onDelete: Restrict)
+  instalment         Instalment @relation(fields: [instalmentId], references: [id], onDelete: Restrict)
+
+  @@index([instalmentId])
+  @@map("allocations")
+}
